@@ -128,6 +128,7 @@ router.post('/register', (req, res) => {
 router.post('/login', (req, res) => {
     const  email  =  req.body.email;
     const  password  =  req.body.password;
+    console.log(email);
     findUserByEmail(email, (err, user)=>{
         if (err) return  res.status(500).send('Server error!');
         if (!user) return  res.status(404).send('User not found!');
