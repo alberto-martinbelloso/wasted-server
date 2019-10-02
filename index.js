@@ -87,6 +87,12 @@ const addTeamMember = (data, cb) => {
     });
 }
 
+const removeTeamMember = (email, cb) => {
+    return  database.run('UPDATE users SET teamName=? WHERE email=?',["", email], (err, rows) => {
+            cb(err, rows)
+    });
+}
+
 createTeamsTable();
 createUsersTable();
 
@@ -99,7 +105,6 @@ router.post('/register', (req, res) => {
 
     const  name  =  req.body.name;
     const  email  =  req.body.email;
-    console.log(req.body);
     const  password  =  bcrypt.hashSync(req.body.password);
 
     createUser([name, email, password], (err)=> {
@@ -168,7 +173,6 @@ router.post('/create-team', (req, res) => {
 router.post('/join-team', (req, res) => {
     const teamName = req.body.team.teamName;
     const userEmail = req.body.user.email;
-    console.log(teamName, userEmail);
     joinTeam([teamName, userEmail], (err) => {
         if(err) {
             console.log(err);
@@ -223,6 +227,27 @@ router.post('/add-member', (req, res) => {
                     res.status(200).send(users);
                 }
             });
+        });
+    });
+});
+
+
+router.post('/remove-member', (req, res) => {
+    const teamName = req.body.teamName;
+    const email = req.body.email;
+    removeTeamMember(email, (err)=> {
+        if(err) {
+            console.log(err);
+            return res.status(500).send("Error fetching members");
+        }
+        getTeamMembers(teamName, (err, users)=> {
+            if(err) {
+                console.log(err);
+                return res.status(500).send("Error fetching members");
+            }
+            else {
+                res.status(200).send(users);
+            }
         });
     });
 });
