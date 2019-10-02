@@ -22,10 +22,10 @@ const  createUsersTable  = () => {
         userId integer NOT NULL PRIMARY KEY AUTOINCREMENT,
         name text,
         email text UNIQUE,
-        teamName text UNIQUE,
+        teamName text,
         password text,
-        teamId integer,
-        FOREIGN KEY(teamId) REFERENCES teams(teamId))`;
+        team integer,
+        FOREIGN KEY(team) REFERENCES teams(teamId))`;
 
     return  database.run(sqlQuery);
 }
@@ -66,6 +66,24 @@ const  createTeam  = (team, cb) => {
 const  joinTeam  = (data, cb) => {
     return  database.run('UPDATE users SET teamName=? WHERE email=?',data, (err) => {
         cb(err);
+    });
+}
+
+const addForeignKey = (data, cb) => {
+    return  database.run('UPDATE users SET team=(SELECT teamId FROM teams WHERE teamName=?) WHERE email=?',data, (err) => {
+        cb(err);
+    });
+}
+
+const getTeamMembers = (team, cb) => {
+    return  database.all(`SELECT * FROM users WHERE teamName=?`,team, (err, rows) => {
+            cb(err, rows)
+    });
+}
+
+const addTeamMember = (data, cb) => {
+    return  database.run('UPDATE users SET teamName=? WHERE email=?',data, (err, rows) => {
+            cb(err, rows)
     });
 }
 
@@ -115,7 +133,6 @@ router.post('/login', (req, res) => {
         const  accessToken  =  jwt.sign({ id:  user.id }, SECRET_KEY, {
             expiresIn:  expiresIn
         });
-        console.log(user);
         res.status(200).send({ "user":  user, "access_token":  accessToken, "expires_in":  expiresIn});
     });
 });
@@ -131,7 +148,36 @@ router.post('/create-team', (req, res) => {
         }
         joinTeam([teamName, email], (err) => {
             if(err) {
+                console.log(err);
                 return res.status(500).send("Error joining team");
+            }
+            addForeignKey([teamName, email], (err)=> {
+                if (err) {
+                    console.log(err);
+                    return res.status(500).send("Error adding foreign key");
+                }
+                else {
+                    res.status(200).send({ "teamName": teamName });
+                }
+            });
+        });
+    });
+});
+
+
+router.post('/join-team', (req, res) => {
+    const teamName = req.body.team.teamName;
+    const userEmail = req.body.user.email;
+    console.log(teamName, userEmail);
+    joinTeam([teamName, userEmail], (err) => {
+        if(err) {
+            console.log(err);
+            return res.status(500).send("Error joining team");
+        }
+        addForeignKey([teamName, userEmail], (err)=> {
+            if (err) {
+                console.log(err);
+                return res.status(500).send("Error adding foreign key");
             }
             else {
                 res.status(200).send({ "teamName": teamName });
@@ -141,20 +187,45 @@ router.post('/create-team', (req, res) => {
 });
 
 
-router.post('/join-team', (req, res) => {
+router.post('/get-team-members', (req, res) => {
     const teamName = req.body.teamName;
-    const userEmail = req.body.user.email;
-    console.log(teamName);
-    joinTeam([teamName, userEmail], (err) => {
+    getTeamMembers(teamName, (err, users)=> {
         if(err) {
-            return res.status(500).send("Error joining team");
+            console.log(err);
+            return res.status(500).send("Error fetching members");
         }
         else {
-            res.status(200).send({ "teamName": teamName });
+            res.status(200).send(users);
         }
     });
 });
 
+
+router.post('/add-member', (req, res) => {
+    const teamName = req.body.teamName;
+    const email = req.body.email;
+    addTeamMember([teamName, email], (err)=> {
+        if(err) {
+            console.log(err);
+            return res.status(500).send("Error fetching members");
+        }
+        addForeignKey([teamName, email], (err)=> {
+            if (err) {
+                console.log(err);
+                return res.status(500).send("Error adding foreign key");
+            }
+            getTeamMembers(teamName, (err, users)=> {
+                if(err) {
+                    console.log(err);
+                    return res.status(500).send("Error fetching members");
+                }
+                else {
+                    res.status(200).send(users);
+                }
+            });
+        });
+    });
+});
 
 
 app.use(router);
