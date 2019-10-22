@@ -133,6 +133,7 @@ router.post('/login', (req, res) => {
         if (err) return  res.status(500).send('Server error!');
         if (!user) return  res.status(404).send('User not found!');
         const  result  =  bcrypt.compareSync(password, user.password);
+        console.log(result);
         if(!result) return  res.status(401).send('Password not valid!');
 
         const  expiresIn  =  24  *  60  *  60;
