@@ -110,10 +110,10 @@ router.post('/register', (req, res) => {
     createUser([name, email, password], (err)=> {
         if(err) {
     		console.log(err);
-    		return res.status(500).send("This user already exists.");
+    		return res.status(500).send("Error creating user.");
         }
         findUserByEmail(email, (err, user)=> {
-            if (err) return  res.status(500).send('Server error!');  
+            if (err) return  res.status(500).send('This user already exists. Try a different email');  
             const  expiresIn  =  24  *  60  *  60;
             const  accessToken  =  jwt.sign({ id:  user.id }, SECRET_KEY, {
                 expiresIn:  expiresIn
