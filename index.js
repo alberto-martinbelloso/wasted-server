@@ -110,7 +110,7 @@ router.post('/register', (req, res) => {
     createUser([name, email, password], (err)=> {
         if(err) {
     		console.log(err);
-    		return res.status(500).send("Server error!");
+    		return res.status(500).send("This user already exists.");
         }
         findUserByEmail(email, (err, user)=> {
             if (err) return  res.status(500).send('Server error!');  
@@ -131,10 +131,10 @@ router.post('/login', (req, res) => {
     console.log(email);
     findUserByEmail(email, (err, user)=>{
         if (err) return  res.status(500).send('Server error!');
-        if (!user) return  res.status(404).send('User not found!');
+        if (!user) return  res.status(404).send('User does not exist.');
         const  result  =  bcrypt.compareSync(password, user.password);
         console.log(result);
-        if(!result) return  res.status(401).send('Password not valid!');
+        if(!result) return  res.status(401).send('Incorrect password.');
 
         const  expiresIn  =  24  *  60  *  60;
         const  accessToken  =  jwt.sign({ id:  user.id }, SECRET_KEY, {
