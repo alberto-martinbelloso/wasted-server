@@ -151,12 +151,12 @@ router.post('/create-team', (req, res) => {
     createTeam([teamName], (err) => {
         if(err) {
             console.log(err);
-            return res.status(500).send("Error creating team");
+            return res.status(500).send("Team already exists, choose a different name.");
         }
         joinTeam([teamName, email], (err) => {
             if(err) {
                 console.log(err);
-                return res.status(500).send("Error joining team");
+                return res.status(500).send("You are already member of a team.");
             }
             addForeignKey([teamName, email], (err)=> {
                 if (err) {
@@ -178,7 +178,7 @@ router.post('/join-team', (req, res) => {
     joinTeam([teamName, userEmail], (err) => {
         if(err) {
             console.log(err);
-            return res.status(500).send("Error joining team");
+            return res.status(500).send("You are already member of a team.");
         }
         addForeignKey([teamName, userEmail], (err)=> {
             if (err) {
@@ -213,7 +213,7 @@ router.post('/add-member', (req, res) => {
     addTeamMember([teamName, email], (err)=> {
         if(err) {
             console.log(err);
-            return res.status(500).send("Error fetching members");
+            return res.status(500).send("Error adding member. User does not exist or is already in a team.");
         }
         addForeignKey([teamName, email], (err)=> {
             if (err) {
