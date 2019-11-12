@@ -110,7 +110,7 @@ router.post('/register', (req, res) => {
     createUser([name, email, password], (err)=> {
         if(err) {
     		console.log(err);
-    		return res.status(500).send("Error creating user.");
+    		return res.status(500).send("This user already exists.");
         }
         findUserByEmail(email, (err, user)=> {
             if (err) return  res.status(500).send('This user already exists. Try a different email');  
